@@ -10,5 +10,8 @@ set(PROJECT_VER "1.5.9")
 add_compile_options(-Wno-missing-field-initializers)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+
+set(EXTRA_COMPONENT_DIRS "${CMAKE_SOURCE_DIR}/my_components") # 添加自定义组件目录
+
 project(xiaozhi)
 

@@ -2,7 +2,7 @@ menu "Xiaozhi Assistant"
 
 config OTA_VERSION_URL
     string "OTA Version URL"
-    default "https://api.tenclass.net/xiaozhi/ota/"
+    default "http://farm.chatchat.space:48002/xiaozhi/ota/"
     help
         The application will access this URL to check for updates.
 
@@ -38,7 +38,7 @@ endchoice
 config WEBSOCKET_URL
     depends on CONNECTION_TYPE_WEBSOCKET
     string "Websocket URL"
-    default "wss://api.tenclass.net/xiaozhi/v1/"
+    default "ws://farm.chatchat.space:48000/xiaozhi/v1/"
     help
         Communication with the server through websocket after wake up.
 
