@@ -23,7 +23,7 @@
 
 LV_FONT_DECLARE(font_puhui_20_4);
 LV_FONT_DECLARE(font_awesome_20_4);
-
+dd
 class YAKA_EXPLORATION_V1 : public WifiBoard {
 private:
     i2c_master_bus_handle_t i2c_bus_;
@@ -39,9 +39,6 @@ private:
     bool power_enabled_;            // 电源状态
     bool modules_enabled_;          // 模块状态
     
-    // 定时器
-    esp_timer_handle_t power_timer_;
-
     void InitializeGPIO() {
         ESP_LOGI(TAG, "Initializing GPIO");
         
@@ -54,7 +51,7 @@ private:
             .intr_type = GPIO_INTR_DISABLE
         };
         ESP_ERROR_CHECK(gpio_config(&pwr_config));
-        gpio_set_level(PWR_EN_GPIO, 1); // 初始化为开机状态
+        gpio_set_level(PWR_EN_GPIO, 0); // 初始化为开机状态，等待按键触发
         
         // 模块控制引脚
         gpio_config_t module_config = {
@@ -70,7 +67,7 @@ private:
         gpio_set_level(G4_EN_GPIO, 0);
         gpio_set_level(MIC_EN_GPIO, 0);
         
-        power_enabled_ = true;
+        power_enabled_ = false;
         modules_enabled_ = false;
     }
 
@@ -78,23 +75,6 @@ private:
         ESP_LOGI(TAG, "Initializing YAKA LED Controller");
         led_controller_ = new YakaLedController();
         led_controller_->Initialize();
-    }
-
-    void InitializePowerControl() {
-        ESP_LOGI(TAG, "Initializing power control");
-        
-        // 创建电源管理定时器
-        esp_timer_create_args_t timer_args = {
-            .callback = [](void* arg) {
-                auto* self = static_cast<YAKA_EXPLORATION_V1*>(arg);
-                ESP_LOGI(TAG, "Power management timer callback");
-                // 可用于周期性检查电源状态
-            },
-            .arg = this,
-            .dispatch_method = ESP_TIMER_TASK,
-            .name = "power_timer"
-        };
-        ESP_ERROR_CHECK(esp_timer_create(&timer_args, &power_timer_));
     }
 
     void InitializeButtons() {
@@ -232,26 +212,21 @@ private:
 
 public:
     YAKA_EXPLORATION_V1() : 
-        key_a_button_(KEYA_GPIO, false, 1000, 100),  // 1秒长按，100ms短按检测
-        key_b_button_(KEYB_GPIO, false, 1000, 100),  // 1秒长按，100ms短按检测
+        key_a_button_(KEYA_GPIO, false),  // 1秒长按，50ms短按检测
+        key_b_button_(KEYB_GPIO, false),  // 1秒长按，50ms短按检测
         led_controller_(nullptr),
         power_enabled_(false),
-        modules_enabled_(false),
-        power_timer_(nullptr) {
+        modules_enabled_(false){
         
         ESP_LOGI(TAG, "Initializing YAKA Exploration V1 Board");
         
         // 按顺序初始化各个子系统
         InitializeGPIO();
-        InitializePowerControl();
         InitializeLEDs();
         InitializeI2c();
         InitializeButtons();
         InitializeIot();
-        
-        // 执行开机启动序列
-        PowerOn();
-        
+                
         ESP_LOGI(TAG, "YAKA Exploration V1 initialization completed successfully");
     }
 
@@ -264,11 +239,7 @@ public:
         // 清理资源
         if (led_controller_) {
             delete led_controller_;
-        }
-                
-        if (power_timer_) {
-            esp_timer_delete(power_timer_);
-        }
+        }               
     }
 
     virtual Led* GetLed() override {
@@ -292,31 +263,31 @@ public:
         return &audio_codec;
     }
 
-    // 公共接口，允许外部控制和查询状态
-    void PublicToggleLEDs() { 
-        if (led_controller_) led_controller_->ToggleLEDs(); 
-    }
+    // // 公共接口，允许外部控制和查询状态
+    // void PublicToggleLEDs() { 
+    //     if (led_controller_) led_controller_->ToggleLEDs(); 
+    // }
     
-    void PublicSetAllLEDs(bool state) { 
-        if (led_controller_) led_controller_->SetAllLEDs(state); 
-    }
+    // void PublicSetAllLEDs(bool state) { 
+    //     if (led_controller_) led_controller_->SetAllLEDs(state); 
+    // }
     
-    void PublicSetLEDBrightness(int brightness) {
-        if (led_controller_) led_controller_->SetLEDBrightness(brightness);
-    }
+    // void PublicSetLEDBrightness(int brightness) {
+    //     if (led_controller_) led_controller_->SetLEDBrightness(brightness);
+    // }
     
-    bool GetLEDState() const { 
-        return (led_controller_) ? led_controller_->GetLEDState() : false; 
-    }
+    // bool GetLEDState() const { 
+    //     return (led_controller_) ? led_controller_->GetLEDState() : false; 
+    // }
     
-    bool GetPowerState() const { return power_enabled_; }
-    bool GetModulesState() const { return modules_enabled_; }
+    // bool GetPowerState() const { return power_enabled_; }
+    // bool GetModulesState() const { return modules_enabled_; }
     
-    // 手动控制接口
-    void ManualPowerOn() { PowerOn(); }
-    void ManualPowerOff() { PowerOff(); }
-    void ManualEnableModules() { EnableModules(); }
-    void ManualDisableModules() { DisableModules(); }
+    // // 手动控制接口
+    // void ManualPowerOn() { PowerOn(); }
+    // void ManualPowerOff() { PowerOff(); }
+    // void ManualEnableModules() { EnableModules(); }
+    // void ManualDisableModules() { DisableModules(); }
 };
 
 DECLARE_BOARD(YAKA_EXPLORATION_V1);

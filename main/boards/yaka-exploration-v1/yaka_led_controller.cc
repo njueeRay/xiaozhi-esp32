@@ -32,18 +32,14 @@ void YakaLedController::Initialize() {
     
     // LED引脚定义
     gpio_num_t led_pins[LED_COUNT] = {
-        LED1_GPIO, LED2_GPIO, LED3_GPIO, LED4_GPIO, LED5_GPIO
+        LED1_GPIO
     };
     
-    // 初始化5个单色LED
+    // 初始化5个单色LED - 使用有效的LEDC定时器配置
     for (int i = 0; i < LED_COUNT; i++) {
         single_leds_[i] = new GpioLed(
             led_pins[i], 
-            0, // 不反转输出
-            static_cast<ledc_timer_t>(LEDC_TIMER_1 + i), 
-            static_cast<ledc_channel_t>(LEDC_CHANNEL_1 + i)
-        );
-        single_leds_[i]->SetBrightness(50); // 设置亮度为50%
+            0);
     }
     
     // 初始化RGB LED (WS2812)
@@ -89,18 +85,6 @@ void YakaLedController::SetSingleLED(int index, bool state) {
     }
 }
 
-void YakaLedController::SetLEDBrightness(int brightness) {
-    if (brightness < 0) brightness = 0;
-    if (brightness > 100) brightness = 100;
-    
-    ESP_LOGI(TAG, "Setting LED brightness to %d%%", brightness);
-    
-    for (int i = 0; i < LED_COUNT; i++) {
-        if (single_leds_[i]) {
-            single_leds_[i]->SetBrightness(brightness);
-        }
-    }
-}
 
 void YakaLedController::ShowStartupSequence() {
     ESP_LOGI(TAG, "Starting LED startup sequence");
@@ -108,14 +92,14 @@ void YakaLedController::ShowStartupSequence() {
     // 逐个点亮LED，创建启动效果
     for (int i = 0; i < LED_COUNT; i++) {
         SetSingleLED(i, true);
-        vTaskDelay(pdMS_TO_TICKS(200)); // 200ms延迟
+        vTaskDelay(pdMS_TO_TICKS(1000)); // 1000ms延迟
     }
     
+    leds_state_ = true;
     // RGB LED状态将通过系统自动管理，不直接控制
     ESP_LOGI(TAG, "RGB LED status will be controlled by system state");
     
-    leds_state_ = true;
-    ESP_LOGI(TAG, "Startup sequence completed");
+    ESP_LOGI(TAG, "Startup sequence completed - All LEDs should be ON");
 }
 
 void YakaLedController::ShowShutdownSequence() {
@@ -128,7 +112,7 @@ void YakaLedController::ShowShutdownSequence() {
     // 逐个关闭LED
     for (int i = LED_COUNT - 1; i >= 0; i--) {
         SetSingleLED(i, false);
-        vTaskDelay(pdMS_TO_TICKS(200)); // 200ms延迟
+        vTaskDelay(pdMS_TO_TICKS(1000)); // 1000ms延迟
     }
     
     // RGB LED关闭将由系统状态自动管理

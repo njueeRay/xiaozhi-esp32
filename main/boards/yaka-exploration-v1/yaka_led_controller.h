@@ -8,7 +8,7 @@
 
 class YakaLedController {
 private:
-    static const int LED_COUNT = 5;
+    static const int LED_COUNT = 1;
     GpioLed* single_leds_[LED_COUNT];
     SingleLed* rgb_led_;
     bool leds_state_;
@@ -23,7 +23,6 @@ public:
     void SetAllLEDs(bool state);
     void ToggleLEDs();
     void SetSingleLED(int index, bool state);
-    void SetLEDBrightness(int brightness);
     void ShowStartupSequence();
     void ShowShutdownSequence();
     
