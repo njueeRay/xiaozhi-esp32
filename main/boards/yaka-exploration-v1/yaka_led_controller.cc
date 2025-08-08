@@ -7,7 +7,6 @@
 const char* YakaLedController::TAG = "YakaLedController";
 
 YakaLedController::YakaLedController() : 
-    rgb_led_(nullptr),
     leds_state_(false) {
     
     for (int i = 0; i < LED_COUNT; i++) {
@@ -20,10 +19,6 @@ YakaLedController::~YakaLedController() {
         if (single_leds_[i]) {
             delete single_leds_[i];
         }
-    }
-    
-    if (rgb_led_) {
-        delete rgb_led_;
     }
 }
 
@@ -41,12 +36,10 @@ void YakaLedController::Initialize() {
             led_pins[i], 
             0);
     }
-    
-    // 初始化RGB LED (WS2812)
-    rgb_led_ = new SingleLed(BUILTIN_LED_GPIO);
-    
+    ESP_LOGI(TAG, "LED Controller initialized with %d LEDs", LED_COUNT);    
+
     leds_state_ = false;
-    ESP_LOGI(TAG, "LED Controller initialized with %d LEDs", LED_COUNT);
+    ESP_LOGI(TAG, "LED Controller initialized - Finished!");
 }
 
 void YakaLedController::SetAllLEDs(bool state) {
@@ -96,8 +89,6 @@ void YakaLedController::ShowStartupSequence() {
     }
     
     leds_state_ = true;
-    // RGB LED状态将通过系统自动管理，不直接控制
-    ESP_LOGI(TAG, "RGB LED status will be controlled by system state");
     
     ESP_LOGI(TAG, "Startup sequence completed - All LEDs should be ON");
 }
@@ -105,8 +96,6 @@ void YakaLedController::ShowStartupSequence() {
 void YakaLedController::ShowShutdownSequence() {
     ESP_LOGI(TAG, "Starting LED shutdown sequence");
     
-    // RGB LED状态将通过系统自动管理，不直接控制
-    ESP_LOGI(TAG, "RGB LED status will be controlled by system state");
     vTaskDelay(pdMS_TO_TICKS(500)); // 保持延迟以显示关机意图
     
     // 逐个关闭LED
@@ -114,10 +103,7 @@ void YakaLedController::ShowShutdownSequence() {
         SetSingleLED(i, false);
         vTaskDelay(pdMS_TO_TICKS(1000)); // 1000ms延迟
     }
-    
-    // RGB LED关闭将由系统状态自动管理
-    ESP_LOGI(TAG, "RGB LED shutdown will be managed by system state");
-    
+        
     leds_state_ = false;
     ESP_LOGI(TAG, "Shutdown sequence completed");
 } 

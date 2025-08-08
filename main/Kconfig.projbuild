@@ -51,7 +51,7 @@ config WEBSOCKET_ACCESS_TOKEN
 
 choice BOARD_TYPE
     prompt "Board Type"
-    default BOARD_TYPE_YAKA_EXPLORATION_V1
+    default BOARD_TYPE_YAKA_EXPLORATION_V2
     help
         Board type. 开发板类型
     config BOARD_TYPE_BREAD_COMPACT_WIFI
@@ -162,6 +162,8 @@ choice BOARD_TYPE
         bool "四博智联AI陪伴盒子"
     config BOARD_TYPE_YAKA_EXPLORATION_V1
         bool "ChatChatTech Yaka Exploration V1"
+    config BOARD_TYPE_YAKA_EXPLORATION_V2
+        bool "ChatChatTech Yaka Exploration V2"
 endchoice
 
 choice DISPLAY_OLED_TYPE

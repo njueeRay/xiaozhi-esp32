@@ -140,6 +140,8 @@ elseif(CONFIG_BOARD_TYPE_ESP32_CGC)
     set(BOARD_TYPE "esp32-cgc")
 elseif(CONFIG_BOARD_TYPE_YAKA_EXPLORATION_V1)
     set(BOARD_TYPE "yaka-exploration-v1")
+elseif(CONFIG_BOARD_TYPE_YAKA_EXPLORATION_V2)
+    set(BOARD_TYPE "yaka-exploration-v2")
 endif()
 file(GLOB BOARD_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.cc

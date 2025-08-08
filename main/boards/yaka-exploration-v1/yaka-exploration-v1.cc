@@ -23,7 +23,6 @@
 
 LV_FONT_DECLARE(font_puhui_20_4);
 LV_FONT_DECLARE(font_awesome_20_4);
-dd
 class YAKA_EXPLORATION_V1 : public WifiBoard {
 private:
     i2c_master_bus_handle_t i2c_bus_;
@@ -44,31 +43,59 @@ private:
         
         // 电源控制引脚
         gpio_config_t pwr_config = {
-            .pin_bit_mask = (1ULL << PWR_EN_GPIO),
+            .pin_bit_mask = (1ULL << PWR_EN_GPIO) ,
             .mode = GPIO_MODE_OUTPUT,
-            .pull_up_en = GPIO_PULLUP_DISABLE,
+            .pull_up_en = GPIO_PULLUP_ENABLE,
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
             .intr_type = GPIO_INTR_DISABLE
         };
         ESP_ERROR_CHECK(gpio_config(&pwr_config));
-        gpio_set_level(PWR_EN_GPIO, 0); // 初始化为开机状态，等待按键触发
-        
+        gpio_set_level(PWR_EN_GPIO, 1); // 初始化为开机状态，等待按键触发
+        // vTaskDelay(1000);
+        ESP_LOGI(TAG, "PWR_EN_GPIO=%d", gpio_get_level(PWR_EN_GPIO));
+        // printf("PWR_EN_GPIO=%d\n", gpio_get_level(PWR_EN_GPIO));
+
+        // LED控制引脚
+        gpio_config_t led_config = {
+            .pin_bit_mask = (1ULL << LED1_GPIO) | (1ULL << LED2_GPIO) | (1ULL << LED3_GPIO) | (1ULL << LED4_GPIO) | (1ULL << LED5_GPIO),
+            .mode = GPIO_MODE_OUTPUT,
+            .pull_up_en = GPIO_PULLUP_ENABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .intr_type = GPIO_INTR_DISABLE
+        };
+        ESP_ERROR_CHECK(gpio_config(&led_config));
+        gpio_set_level(LED1_GPIO, 1); 
+        gpio_set_level(LED2_GPIO, 1); 
+        gpio_set_level(LED3_GPIO, 1);
+        gpio_set_level(LED4_GPIO, 1);
+        gpio_set_level(LED5_GPIO, 1); 
+        // vTaskDelay(1000);
+        ESP_LOGI(TAG, "LED1_GPIO=%d, LED2_GPIO=%d, LED3_GPIO=%d, LED4_GPIO=%d, LED5_GPIO=%d",
+                 gpio_get_level(LED1_GPIO), gpio_get_level(LED2_GPIO),
+                 gpio_get_level(LED3_GPIO), gpio_get_level(LED4_GPIO), gpio_get_level(LED5_GPIO));
+        printf("LED1_GPIO=%d, LED2_GPIO=%d, LED3_GPIO=%d, LED4_GPIO=%d, LED5_GPIO=%d\n",
+               gpio_get_level(LED1_GPIO), gpio_get_level(LED2_GPIO),
+               gpio_get_level(LED3_GPIO), gpio_get_level(LED4_GPIO), gpio_get_level(LED5_GPIO));
+
         // 模块控制引脚
         gpio_config_t module_config = {
-            .pin_bit_mask = (1ULL << G4_EN_GPIO) | (1ULL << MIC_EN_GPIO),
+            .pin_bit_mask = (1ULL << ML307_EN_GPIO) | (1ULL << MIC_EN_GPIO),
             .mode = GPIO_MODE_OUTPUT,
-            .pull_up_en = GPIO_PULLUP_DISABLE,
+            .pull_up_en = GPIO_PULLUP_ENABLE,
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
             .intr_type = GPIO_INTR_DISABLE
         };
         ESP_ERROR_CHECK(gpio_config(&module_config));
-        
-        // 初始化时禁用模块
-        gpio_set_level(G4_EN_GPIO, 0);
-        gpio_set_level(MIC_EN_GPIO, 0);
-        
-        power_enabled_ = false;
-        modules_enabled_ = false;
+        gpio_set_level(ML307_EN_GPIO, 1);
+        gpio_set_level(MIC_EN_GPIO, 1);
+        vTaskDelay(1000);
+        ESP_LOGI(TAG, "ML307_EN_GPIO=%d, MIC_EN_GPIO=%d",
+                gpio_get_level(ML307_EN_GPIO), gpio_get_level(MIC_EN_GPIO));
+        printf("ML307_EN_GPIO=%d, MIC_EN_GPIO=%d\n",
+               gpio_get_level(ML307_EN_GPIO), gpio_get_level(MIC_EN_GPIO));
+        power_enabled_ = true;
+        modules_enabled_ = true;
+
     }
 
     void InitializeLEDs() {
@@ -121,7 +148,7 @@ private:
 
     void EnableModules() {
         ESP_LOGI(TAG, "Enabling modules (4G and MIC)");
-        gpio_set_level(G4_EN_GPIO, 1);
+        gpio_set_level(ML307_EN_GPIO, 1);
         gpio_set_level(MIC_EN_GPIO, 1);
         modules_enabled_ = true;
         
@@ -132,7 +159,7 @@ private:
 
     void DisableModules() {
         ESP_LOGI(TAG, "Disabling modules (4G and MIC)");
-        gpio_set_level(G4_EN_GPIO, 0);
+        gpio_set_level(ML307_EN_GPIO, 0);
         gpio_set_level(MIC_EN_GPIO, 0);
         modules_enabled_ = false;
         ESP_LOGI(TAG, "Modules disabled");
@@ -199,6 +226,7 @@ private:
             },
         };
         ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_bus_cfg, &i2c_bus_));
+        ESP_LOGI(TAG, "I2C bus initialized successfully");
     }
 
     // 物联网初始化，添加对 AI 可见设备 
@@ -221,9 +249,9 @@ public:
         ESP_LOGI(TAG, "Initializing YAKA Exploration V1 Board");
         
         // 按顺序初始化各个子系统
+        InitializeI2c();
         InitializeGPIO();
         InitializeLEDs();
-        InitializeI2c();
         InitializeButtons();
         InitializeIot();
                 
@@ -242,11 +270,14 @@ public:
         }               
     }
 
-    virtual Led* GetLed() override {
-        return (led_controller_) ? led_controller_->GetRGBLed() : nullptr;
-    }
+    // virtual Led* GetLed() override {
+    //     ESP_LOGI(TAG, "Getting LED instance");
+    //     static SingleLed led(BUILTIN_LED_GPIO);
+    //     return &led;
+    // }
 
     virtual AudioCodec* GetAudioCodec() override {
+        ESP_LOGI(TAG, "Initializing audio codec");
         static Es8388AudioCodec audio_codec(
             i2c_bus_, 
             I2C_NUM_0, 
@@ -257,37 +288,13 @@ public:
             AUDIO_I2S_GPIO_WS, 
             AUDIO_I2S_GPIO_DOUT, 
             AUDIO_I2S_GPIO_DIN,
-            GPIO_NUM_NC, 
+            AUDIO_CODEC_PA_PIN, 
             AUDIO_CODEC_ES8388_ADDR
         );
+        ESP_LOGI(TAG, "Audio codec initialized successfully");
         return &audio_codec;
     }
 
-    // // 公共接口，允许外部控制和查询状态
-    // void PublicToggleLEDs() { 
-    //     if (led_controller_) led_controller_->ToggleLEDs(); 
-    // }
-    
-    // void PublicSetAllLEDs(bool state) { 
-    //     if (led_controller_) led_controller_->SetAllLEDs(state); 
-    // }
-    
-    // void PublicSetLEDBrightness(int brightness) {
-    //     if (led_controller_) led_controller_->SetLEDBrightness(brightness);
-    // }
-    
-    // bool GetLEDState() const { 
-    //     return (led_controller_) ? led_controller_->GetLEDState() : false; 
-    // }
-    
-    // bool GetPowerState() const { return power_enabled_; }
-    // bool GetModulesState() const { return modules_enabled_; }
-    
-    // // 手动控制接口
-    // void ManualPowerOn() { PowerOn(); }
-    // void ManualPowerOff() { PowerOff(); }
-    // void ManualEnableModules() { EnableModules(); }
-    // void ManualDisableModules() { DisableModules(); }
 };
 
 DECLARE_BOARD(YAKA_EXPLORATION_V1);

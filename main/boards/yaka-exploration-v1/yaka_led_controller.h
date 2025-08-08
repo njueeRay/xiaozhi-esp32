@@ -10,7 +10,6 @@ class YakaLedController {
 private:
     static const int LED_COUNT = 1;
     GpioLed* single_leds_[LED_COUNT];
-    SingleLed* rgb_led_;
     bool leds_state_;
     
     static const char* TAG;
@@ -27,7 +26,6 @@ public:
     void ShowShutdownSequence();
     
     bool GetLEDState() const { return leds_state_; }
-    SingleLed* GetRGBLed() const { return rgb_led_; }
 };
 
 #endif // _YAKA_LED_CONTROLLER_H_ 
