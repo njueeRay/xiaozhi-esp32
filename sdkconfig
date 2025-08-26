@@ -563,14 +563,14 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 # Xiaozhi Assistant
 #
-CONFIG_OTA_VERSION_URL="http://farm.chatchat.space:48002/yaka/ota/"
+CONFIG_OTA_VERSION_URL="https://api.tenclass.net/xiaozhi/ota/"
 CONFIG_LANGUAGE_ZH_CN=y
 # CONFIG_LANGUAGE_ZH_TW is not set
 # CONFIG_LANGUAGE_EN_US is not set
 # CONFIG_LANGUAGE_JA_JP is not set
 # CONFIG_CONNECTION_TYPE_MQTT_UDP is not set
 CONFIG_CONNECTION_TYPE_WEBSOCKET=y
-CONFIG_WEBSOCKET_URL="ws://farm.chatchat.space:48000/yaka/v1/"
+CONFIG_WEBSOCKET_URL="wss://api.tenclass.net/xiaozhi/v1/"
 CONFIG_WEBSOCKET_ACCESS_TOKEN="test-token"
 # CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI is not set
 # CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_LCD is not set

@@ -38,6 +38,38 @@ public:
     }
 };
 
+
+class CustomAudioCodec : public BoxAudioCodec {
+private:
+    Pca9557* pca9557_;
+
+public:
+    CustomAudioCodec(i2c_master_bus_handle_t i2c_bus, Pca9557* pca9557) 
+        : BoxAudioCodec(i2c_bus, 
+                       AUDIO_INPUT_SAMPLE_RATE, 
+                       AUDIO_OUTPUT_SAMPLE_RATE,
+                       AUDIO_I2S_GPIO_MCLK, 
+                       AUDIO_I2S_GPIO_BCLK, 
+                       AUDIO_I2S_GPIO_WS, 
+                       AUDIO_I2S_GPIO_DOUT, 
+                       AUDIO_I2S_GPIO_DIN,
+                       GPIO_NUM_NC, 
+                       AUDIO_CODEC_ES8311_ADDR, 
+                       AUDIO_CODEC_ES7210_ADDR, 
+                       AUDIO_INPUT_REFERENCE),
+          pca9557_(pca9557) {
+    }
+
+    virtual void EnableOutput(bool enable) override {
+        BoxAudioCodec::EnableOutput(enable);
+        if (enable) {
+            pca9557_->SetOutputState(1, 1);
+        } else {
+            pca9557_->SetOutputState(1, 0);
+        }
+    }
+};
+
 class YAKA_EXPLORATION_V2 : public WifiBoard {
 private:
     i2c_master_bus_handle_t i2c_bus_;
@@ -109,7 +141,7 @@ private:
         });
         key_b_button_.OnClick([this]() {
             ESP_LOGI(TAG, "Key B pressed, change led state");
-            pca9557_->SetOutputState(LED1_IOEX, 0);            
+            pca9557_->SetOutputState(LED1_IOEX, 1);            
         });
     }
 
@@ -127,7 +159,9 @@ public:
         key_a_button_(KEYA_GPIO),           // 需要添加KEY_A_GPIO的定义
         key_b_button_(KEYB_GPIO),           // 需要添加KEY_B_GPIO的定义
         boot_button_(BOOT_BUTTON_GPIO) {
+        InitializeGPIO();
         InitializeI2c();
+        InitializeLEDs();
         InitializeButtons();
         InitializeIot();
         ESP_LOGI(TAG, "YAKA Exploration V2 initialization completed successfully");
@@ -139,21 +173,11 @@ public:
     }
 
     virtual AudioCodec* GetAudioCodec() override {
-        static BoxAudioCodec audio_codec(
-            i2c_bus_, 
-            AUDIO_INPUT_SAMPLE_RATE, 
-            AUDIO_OUTPUT_SAMPLE_RATE,
-            AUDIO_I2S_GPIO_MCLK, 
-            AUDIO_I2S_GPIO_BCLK, 
-            AUDIO_I2S_GPIO_WS, 
-            AUDIO_I2S_GPIO_DOUT, 
-            AUDIO_I2S_GPIO_DIN,
-            GPIO_NUM_NC, 
-            AUDIO_CODEC_ES8311_ADDR, 
-            AUDIO_CODEC_ES7210_ADDR, 
-            AUDIO_INPUT_REFERENCE);
-        return &audio_codec;
-    }
+            static CustomAudioCodec audio_codec(
+                i2c_bus_, 
+                pca9557_);
+            return &audio_codec;
+        }
 
 };
 

@@ -30,11 +30,11 @@
 #define VOLUME_DOWN_BUTTON_GPIO   GPIO_NUM_NC
 
 // LED定义
-#define LED1_IOEX                 0x03
-#define LED2_IOEX                 0x04
-#define LED3_IOEX                 0x05
-#define LED4_IOEX                 0x06
-#define LED5_IOEX                 0x07
+#define LED1_IOEX                 3
+#define LED2_IOEX                 4
+#define LED3_IOEX                 5
+#define LED4_IOEX                 6
+#define LED5_IOEX                 7
 
 
 // 4G模块
